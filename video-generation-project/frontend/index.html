@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Generation</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Video Generation</h1>
+
+        <div class="input-group">
+            <label for="textInput">Text for Video:</label>
+            <textarea id="textInput" rows="5" placeholder="Enter text for video generation..."></textarea>
+        </div>
+
+        <div class="input-group">
+            <label for="voiceIdInput">Voice ID (optional):</label>
+            <input type="text" id="voiceIdInput" placeholder="e.g., male_001">
+        </div>
+
+        <button id="generateVideoBtn">Generate Video</button>
+
+        <div class="input-group">
+            <label for="imageUpload">Upload Image for Video:</label>
+            <input type="file" id="imageUpload" accept="image/*">
+        </div>
+
+        <div class="input-group">
+            <label for="imagePromptInput">Prompt for Image Video:</label>
+            <textarea id="imagePromptInput" rows="3" placeholder="Enter prompt for image-to-video generation..."></textarea>
+        </div>
+
+        <button id="generateVideoFromImageBtn">Generate Video from Image</button>
+
+        <div class="status-section">
+            <h2>Task Status</h2>
+            <p>Task ID: <span id="taskIdDisplay">N/A</span></p>
+            <p>Status: <span id="statusDisplay">N/A</span></p>
+            <button id="checkStatusBtn" disabled>Check Status (Current Task)</button>
+        </div>
+
+        <div class="status-section">
+            <h2>Check Status by Task ID</h2>
+            <div class="input-group">
+                <label for="manualTaskIdInput">Enter Task ID:</label>
+                <input type="text" id="manualTaskIdInput" placeholder="Enter a task ID">
+            </div>
+            <button id="manualCheckStatusBtn">Check Status</button>
+            <p>Manual Status: <span id="manualStatusDisplay">N/A</span></p>
+            <p id="manualFileIdContainer">Manual File ID: <span id="manualFileIdDisplay">N/A</span></p>
+            <button id="manualDownloadVideoBtn" disabled>Download Video (Manual Task)</button>
+        </div>
+
+        <div class="video-section">
+            <h2>Generated Video</h2>
+            <p>File ID: <span id="autoGenFileIdDisplay">N/A</span></p>
+            <button id="downloadVideoBtn" disabled>Download Video</button>
+            <div id="videoPlayer"></div>
+        </div>
+
+        <div id="message" class="message"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
