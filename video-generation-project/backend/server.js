@@ -13,11 +13,13 @@ app.use(express.json()); // Default limit is fine now
 
 app.use(express.static(path.join(__dirname, '../frontend')));
 
+
 // IMPORTANT: For production, sensitive information like API keys and endpoints
 // should be loaded from environment variables (e.g., process.env.MINIMAXI_API_KEY)
 // and not hardcoded or committed to version control.
 // const MINIMAXI_API_KEY = process.env.MINIMAXI_API_KEY;
 // const MINIMAXI_VIDEO_GEN_URL = process.env.MINIMAXI_VIDEO_GEN_URL;
+
 
 // Route to initiate video generation
 app.post('/api/generate-video', async (req, res) => {
