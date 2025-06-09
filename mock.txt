@@ -1,0 +1,111 @@
+# Mocked API Details and Integration Guide
+
+This file documents the APIs that are currently mocked in `video-generation-project/backend/server.js` and provides guidance on how to replace these mocks with actual backend implementations.
+
+---
+
+## 1. Login API (`/api/login`)
+
+*   **Current Mock Behavior:** Always succeeds if `username` is 'admin' and `password` is 'admin'.
+*   **Endpoint:** `POST /api/login`
+*   **Frontend Interaction:** `video-generation-project/frontend/login.js`
+*   **Backend Implementation:** `video-generation-project/backend/server.js`
+
+**To Replace Mock:**
+1.  **Backend (`server.js`):**
+    *   Remove the hardcoded `admin`/`admin` check.
+    *   Integrate with your actual user authentication system (e.g., database lookup, external OAuth provider).
+    *   Ensure the endpoint returns a `200 OK` with `{ success: true, message: 'Login successful' }` on success, and `401 Unauthorized` with `{ success: false, error: 'Invalid username or password' }` or similar on failure.
+    *   Consider implementing session management (e.g., JWT tokens) for persistent login.
+2.  **Frontend (`login.js`):**
+    *   No changes needed if the backend response structure remains `success: true/false`.
+
+---
+
+## 2. Video Generation API (`/api/generate-video`)
+
+*   **Current Mock Behavior:** Always returns a successful response immediately after creating an in-memory task, without calling any external video generation service.
+*   **Endpoint:** `POST /api/generate-video`
+*   **Frontend Interaction:** `video-generation-project/frontend/script.js`
+*   **Backend Implementation:** `video-generation-project/backend/server.js`
+
+**To Replace Mock:**
+1.  **Backend (`server.js`):**
+    *   Locate the `// Mocking the MiniMaxi API call to always succeed` section.
+    *   Uncomment or re-implement the `fetch` call to `MINIMAXI_VIDEO_GEN_URL` (or your actual video generation service).
+    *   Ensure `MINIMAXI_API_KEY` and `MINIMAXI_VIDEO_GEN_URL` are correctly configured with actual values.
+    *   The `payload` structure (`model`, `prompt`, `resolution`, `duration`, `token`) should match the requirements of your external API.
+    *   Handle the actual response from the external API. If the external API returns a task ID or status, update the `newTask` object accordingly before sending the response to the frontend.
+    *   Implement robust error handling for external API failures (e.g., network issues, invalid API key, service errors). The current `catch` block is a placeholder.
+    *   Consider making the task status update from '排队中' to '处理中' or '失败' based on the *actual* response from the video generation service, not just a mock.
+2.  **Frontend (`script.js`):**
+    *   No changes needed if the backend continues to return `{ message, data, taskId }` on success and `{ error, details, taskId }` on failure.
+
+---
+
+## 3. Get All Tasks API (`/api/tasks`)
+
+*   **Current Mock Behavior:** Returns tasks from an in-memory array. This data is lost when the server restarts.
+*   **Endpoint:** `GET /api/tasks`
+*   **Frontend Interaction:** `video-generation-project/frontend/task-management.js` (`fetchTasks` function)
+*   **Backend Implementation:** `video-generation-project/backend/server.js`
+
+**To Replace Mock:**
+1.  **Backend (`server.js`):**
+    *   Replace the `tasks` in-memory array with a connection to a persistent database (e.g., MongoDB, PostgreSQL, SQLite).
+    *   Implement logic to retrieve all tasks from the database.
+    *   Ensure the returned data structure for each task matches the current frontend expectation (e.g., `id`, `text`, `ratio`, `model`, `quantity`, `status`).
+2.  **Frontend (`task-management.js`):**
+    *   No changes needed if the backend continues to return an array of task objects with the expected properties.
+
+---
+
+## 4. Query Task Status API (`/api/tasks/:id/query`)
+
+*   **Current Mock Behavior:** Simulates status updates based on `taskId` (e.g., `task_1` cycles between '排队中' and '失败', `task_2` goes to '已完成').
+*   **Endpoint:** `POST /api/tasks/:id/query`
+*   **Frontend Interaction:** `video-generation-project/frontend/task-management.js` (`queryTaskStatus` function)
+*   **Backend Implementation:** `video-generation-project/backend/server.js`
+
+**To Replace Mock:**
+1.  **Backend (`server.js`):**
+    *   Remove the `if (taskId === 'task_1')` and `if (taskId === 'task_2')` specific logic.
+    *   Implement actual logic to query the status of the task from the external video generation service or your internal task processing system.
+    *   Update the task's status in your persistent database based on the real-time status.
+    *   Return the updated task object.
+2.  **Frontend (`task-management.js`):**
+    *   No changes needed if the backend continues to return `{ message, task }` with the updated task object.
+
+---
+
+## 5. Retry Task API (`/api/tasks/:id/retry`)
+
+*   **Current Mock Behavior:** Resets a failed task's status to '排队中' in the in-memory array.
+*   **Endpoint:** `POST /api/tasks/:id/retry`
+*   **Frontend Interaction:** `video-generation-project/frontend/task-management.js` (`retryTask` function)
+*   **Backend Implementation:** `video-generation-project/backend/server.js`
+
+**To Replace Mock:**
+1.  **Backend (`server.js`):**
+    *   Implement logic to re-queue the task in your actual task processing system.
+    *   Update the task's status to '排队中' in your persistent database.
+    *   Return the updated task object.
+2.  **Frontend (`task-management.js`):**
+    *   No changes needed if the backend continues to return `{ message, task }`.
+
+---
+
+## 6. Download Task API (`/api/tasks/:id/download`)
+
+*   **Current Mock Behavior:** Simulates a download link for completed tasks.
+*   **Endpoint:** `GET /api/tasks/:id/download`
+*   **Frontend Interaction:** `video-generation-project/frontend/task-management.js` (`downloadTask` function)
+*   **Backend Implementation:** `video-generation-project/backend/server.js`
+
+**To Replace Mock:**
+1.  **Backend (`server.js`):**
+    *   Implement logic to retrieve the actual video file or its direct download URL from your storage solution (e.g., cloud storage, local file system).
+    *   Serve the file directly or redirect to the download URL.
+    *   Ensure proper content-type headers for file downloads.
+2.  **Frontend (`task-management.js`):**
+    *   If the backend serves the file directly, the frontend might need to change from `alert` to `window.open(data.downloadUrl)` or similar.

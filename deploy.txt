@@ -1,0 +1,238 @@
+# 项目部署指南：阿里云 ECS 部署
+
+本指南将详细说明如何在阿里云 ECS (Elastic Compute Service) 实例上部署和启动 "视频生成项目" (Video Generation Project)。
+
+## 1. 项目概述
+
+本项目包含一个 Node.js 后端和一个纯前端应用。
+- **后端**: 基于 Express.js，提供视频生成任务管理和模拟的 MiniMaxi API 交互。监听端口 `3000`。
+- **前端**: 纯静态 HTML/CSS/JavaScript 应用，由后端服务器提供服务。
+
+## 2. 部署环境准备
+
+### 2.1 阿里云 ECS 实例准备
+
+1.  **购买 ECS 实例**:
+    *   选择合适的地域和可用区。
+    *   选择操作系统：推荐使用 **Ubuntu Server 20.04 LTS** 或 **CentOS 7/8**。
+    *   选择实例规格：根据项目负载选择，对于测试或低负载，1核2G 或 2核4G 即可。
+    *   配置网络和安全组：
+        *   **安全组**: 确保开放以下端口：
+            *   `22` (SSH，用于远程连接)
+            *   `80` (HTTP，如果使用 Nginx 作为反向代理)
+            *   `443` (HTTPS，如果使用 Nginx 并配置 SSL)
+            *   `3000` (后端服务端口，如果直接暴露或用于内部通信)
+
+2.  **连接到 ECS 实例**:
+    *   使用 SSH 客户端（如 PuTTY, Xshell, 或 macOS/Linux 自带的终端）连接到您的 ECS 实例。
+    *   命令示例：`ssh root@your_ecs_public_ip` (如果使用 root 用户) 或 `ssh your_user@your_ecs_public_ip`。
+
+### 2.2 安装必要的软件
+
+在 ECS 实例上安装 Node.js 和 npm。
+
+1.  **更新系统包列表**:
+    ```bash
+    sudo apt update  # Ubuntu/Debian
+    # 或
+    sudo yum update  # CentOS/RHEL
+    ```
+
+2.  **安装 Node.js 和 npm**:
+    推荐使用 NVM (Node Version Manager) 来安装和管理 Node.js 版本。
+
+    *   **安装 NVM**:
+        ```bash
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+        ```
+        安装完成后，关闭并重新打开终端，或运行 `source ~/.bashrc` (或 `~/.zshrc` 等) 使 NVM 生效。
+
+    *   **使用 NVM 安装 Node.js**:
+        ```bash
+        nvm install 18  # 安装 Node.js 18 LTS 版本，或根据需要选择其他版本
+        nvm use 18
+        nvm alias default 18 # 设置默认版本
+        ```
+    *   **验证安装**:
+        ```bash
+        node -v
+        npm -v
+        ```
+
+## 3. 项目部署
+
+### 3.1 获取项目代码
+
+将项目代码从您的版本控制系统（如 Git）克隆到 ECS 实例上。
+
+1.  **安装 Git (如果未安装)**:
+    ```bash
+    sudo apt install git -y # Ubuntu/Debian
+    # 或
+    sudo yum install git -y # CentOS/RHEL
+    ```
+
+2.  **克隆项目**:
+    选择一个合适的目录存放项目，例如 `/home/your_user/apps/` 或 `/opt/`。
+    ```bash
+    cd /home/your_user/ # 或其他您选择的目录
+    git clone your_repository_url/video-generation-project.git
+    cd video-generation-project
+    ```
+    **注意**: 如果您的项目是私有仓库，请确保配置 SSH 密钥或使用 HTTPS 凭证。
+
+### 3.2 安装后端依赖
+
+进入后端项目目录，安装 Node.js 依赖。
+
+```bash
+cd video-generation-project/backend
+npm install
+```
+
+### 3.3 配置环境变量 (重要--如果涉及到api相关的key敏感信息)
+
+后端代码中提到了敏感信息（如 API 密钥）应从环境变量加载。虽然当前是模拟 API，但为了未来的扩展性，建议遵循此最佳实践。
+
+您可以通过以下方式设置环境变量：
+
+*   **直接在启动命令中设置**:
+    ```bash
+    real_key="your_api_key" api_key="your_api_url" node server.js
+    ```
+*   **使用 `.env` 文件 (配合 `dotenv` 库)**:
+    如果项目未使用 `dotenv`，可以考虑添加。
+*   **使用 PM2 配置文件**: (推荐用于生产环境)
+
+## 4. 启动项目
+
+### 4.1 开发/测试环境启动 (不推荐用于生产)
+
+直接运行 Node.js 服务。
+
+```bash
+cd video-generation-project/backend
+npm start
+```
+服务将在 `http://localhost:3000` 启动。
+
+### 4.2 生产环境启动 (推荐使用 PM2)
+
+PM2 是一个 Node.js 进程管理器，可以保持应用持续运行，并提供负载均衡、日志管理等功能。
+
+1.  **安装 PM2**:
+    ```bash
+    npm install -g pm2
+    ```
+
+2.  **使用 PM2 启动应用**:
+    ```bash
+    cd video-generation-project/backend
+    pm2 start server.js --name "video-gen-backend" --watch
+    ```
+    *   `--name "video-gen-backend"`: 为进程指定一个名称。
+    *   `--watch`: 监控文件变化并自动重启 (开发环境有用，生产环境谨慎使用，可能导致不必要的重启)。生产环境通常不加 `--watch`。
+    *   **推荐的生产启动方式 (无 `--watch`)**:
+        ```bash
+        pm2 start server.js --name "video-gen-backend"
+        ```
+
+3.  **查看 PM2 状态**:
+    ```bash
+    pm2 list
+    pm2 logs video-gen-backend
+    ```
+
+4.  **配置 PM2 开机自启**:
+    ```bash
+    pm2 startup systemd # 或 init.d，根据您的系统选择
+    pm2 save
+    ```
+    按照提示执行生成的命令，以确保服务器重启后应用能自动启动。
+
+## 5. 配置反向代理 (推荐使用 Nginx)
+
+为了更好地管理流量、提供 HTTPS 和服务静态文件，推荐使用 Nginx 作为反向代理。
+
+1.  **安装 Nginx**:
+    ```bash
+    sudo apt install nginx -y # Ubuntu/Debian
+    # 或
+    sudo yum install nginx -y # CentOS/RHEL
+    ```
+
+2.  **配置 Nginx**:
+    创建一个新的 Nginx 配置文件，例如 `/etc/nginx/conf.d/video-gen.conf`。
+
+    ```nginx
+    # /etc/nginx/conf.d/video-gen.conf
+    server {
+        listen 80;
+        server_name your_domain_or_ecs_public_ip; # 替换为您的域名或 ECS 公网 IP
+
+        location / {
+            # 将所有请求代理到 Node.js 后端
+            proxy_pass http://localhost:3000;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_cache_bypass $http_upgrade;
+            # 如果前端是纯静态文件，也可以在这里直接配置 Nginx 服务静态文件
+            # root /home/your_user/video-generation-project/frontend;
+            # index index.html;
+            # try_files $uri $uri/ =404;
+        }
+
+        # 如果您有其他静态资源（如图片、CSS、JS），可以单独配置 Nginx 服务，提高性能
+        # location ~* \.(css|js|gif|jpe?g|png)$ {
+        #     root /home/your_user/video-generation-project/frontend;
+        #     expires 30d;
+        #     add_header Cache-Control "public, no-transform";
+        # }
+
+        # 如果需要 HTTPS，请在此处配置 SSL 证书
+        # listen 443 ssl;
+        # ssl_certificate /etc/nginx/ssl/your_domain.crt;
+        # ssl_certificate_key /etc/nginx/ssl/your_domain.key;
+    }
+    ```
+    **注意**:
+    *   本项目前端由后端服务提供，所以 `location /` 直接代理到后端即可。
+    *   如果您希望 Nginx 直接服务静态前端文件，可以取消注释 `root` 和 `index` 行，并调整 `proxy_pass` 规则，例如只代理 `/api/` 路径到后端。
+    *   将 `your_domain_or_ecs_public_ip` 替换为您的实际域名或 ECS 公网 IP。
+
+3.  **测试 Nginx 配置并重启**:
+    ```bash
+    sudo nginx -t
+    sudo systemctl restart nginx
+    sudo systemctl enable nginx # 设置 Nginx 开机自启
+    ```
+
+## 6. 访问项目
+
+在浏览器中访问您的 ECS 公网 IP 或绑定的域名。
+
+**重要提示**: 在本地开发环境中，您可能通过 `file:///` 协议直接打开 `index.html` 文件。然而，当项目部署到服务器（如阿里云 ECS）后，前端文件将由后端服务器（或 Nginx 反向代理）提供服务，因此您需要通过 `http://` 或 `https://` 协议访问应用的公共 IP 地址或绑定的域名。
+
+**前端首页将通过以下地址访问：**
+
+*   如果直接暴露后端端口 `3000` (不推荐用于生产): `http://your_ecs_public_ip:3000`
+*   如果使用 Nginx 反向代理 (推荐): `http://your_domain_or_ecs_public_ip` (如果配置了 HTTPS 则是 `https://`)
+
+## 7. 生产环境注意事项
+
+*   **安全性**:
+    *   不要在代码中硬编码敏感信息，使用环境变量。
+    *   定期更新系统和软件。
+    *   配置防火墙 (ECS 安全组和系统防火墙如 `ufw` 或 `firewalld`)。
+*   **数据持久化**:
+    *   当前项目使用内存存储任务，重启服务器数据会丢失。生产环境应集成数据库 (如 MongoDB, MySQL, PostgreSQL) 来持久化任务数据。
+*   **日志管理**:
+    *   PM2 会管理日志，但可以考虑集成更专业的日志服务 (如 ELK Stack, 阿里云日志服务 SLS)。
+*   **监控**:
+    *   使用阿里云监控或其他监控工具监控 ECS 实例和应用性能。
+*   **域名和 HTTPS**:
+    *   为您的应用配置域名，并使用 Let's Encrypt 或阿里云 SSL 证书服务配置 HTTPS。
+*   **备份**:
+    *   定期备份您的代码和数据。

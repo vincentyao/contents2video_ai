@@ -16,6 +16,73 @@ body {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 600px;
+    position: relative; /* Added for tooltip positioning, already there, but good to confirm */
+}
+
+nav {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+nav a {
+    text-decoration: none;
+    color: #007bff;
+    padding: 8px 15px;
+    margin: 0 5px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+nav a:hover {
+    background-color: #e9ecef;
+}
+
+nav a.active {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+}
+
+#task-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+#task-table th, #task-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+#task-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+#task-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+#task-table button {
+    width: auto;
+    padding: 5px 10px;
+    margin: 0 5px 0 0;
+    font-size: 14px;
+}
+
+#welcome-message {
+    text-align: center;
+    font-size: 1.2em;
+    color: #666;
+    margin-top: 50px;
+}
+
+#new-task-button {
+    margin-top: 20px;
 }
 
 h1, h2 {
@@ -37,7 +104,7 @@ h1, h2 {
 
 .input-group textarea,
 .input-group input[type="text"],
-.input-group input[type="file"] {
+.input-group select { /* Added select for dropdown */
     width: calc(100% - 20px);
     padding: 10px;
     border: 1px solid #ddd;
@@ -66,34 +133,6 @@ button:disabled {
     cursor: not-allowed;
 }
 
-.status-section, .video-section {
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 1px solid #eee;
-}
-
-.status-section p, .video-section p {
-    font-size: 1.1em;
-    margin-bottom: 10px;
-}
-
-.status-section span, .video-section span {
-    font-weight: bold;
-    color: #007bff;
-}
-
-#videoPlayer {
-    margin-top: 20px;
-    text-align: center;
-}
-
-#videoPlayer video {
-    max-width: 100%;
-    height: auto;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
 .message {
     margin-top: 20px;
     padding: 10px;
@@ -118,4 +157,56 @@ button:disabled {
     background-color: #d4edda;
     color: #155724;
     border: 1px solid #c3e6cb;
+}
+
+.required-indicator {
+    color: red;
+    margin-left: 5px;
+}
+
+.tooltip {
+    display: none; /* Hidden by default */
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 10px;
+    position: absolute;
+    z-index: 1;
+    top: -30px; /* Position above the button */
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap; /* Prevent text wrapping */
+}
+
+/* Add a small arrow to the tooltip */
+.tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%; /* At the bottom of the tooltip */
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+}
+
+/* To make positioning work correctly, the button's parent needs position: relative */
+/* Or, if the tooltip is a sibling, the container needs position: relative */
+/* Since the tooltip is a sibling of the button, and both are inside .container,
+   we need to make .container position: relative if it's not already.
+   Looking at .container, it doesn't have position: relative, so I'll add it. */
+.container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px;
+}
+
+.button-container {
+    position: relative; /* For tooltip positioning */
+    width: 100%;
+    margin-top: 10px; /* Matches button's original margin-top */
 }
