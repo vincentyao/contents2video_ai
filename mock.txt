@@ -6,8 +6,18 @@ This file documents the APIs that are currently mocked in `video-generation-proj
 
 ## 1. Login API (`/api/login`)
 
-*   **Current Mock Behavior:** Always succeeds if `username` is 'admin' and `password` is 'admin'.
-*   **Endpoint:** `POST /api/login`
+*   **Current Behavior:** Integrates with actual backend login API.
+*   **Endpoint:** `POST http://8.219.81.159:8090/api/v1/login`
+*   **Request Format:**
+    ```
+    POST http://8.219.81.159:8090/api/v1/login
+    -H 'accept: application/json'
+    -H 'Content-Type: application/json'
+    -d '{
+      "username": "string",
+      "password": "string"
+    }'
+    ```
 *   **Frontend Interaction:** `video-generation-project/frontend/login.js`
 *   **Backend Implementation:** `video-generation-project/backend/server.js`
 

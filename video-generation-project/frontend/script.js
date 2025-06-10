@@ -61,14 +61,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     generateVideoBtn.addEventListener('click', async () => {
-        const text = textInput.value.trim();
+        const prompt = textInput.value.trim(); // Renamed to prompt
         const ratio = ratioSelect.value;
-        const duration = durationSelect.value;
+        const seconds = parseInt(durationSelect.value); // Parse duration to seconds
         const model = modelSelect.value;
-        const quantity = quantitySelect.value;
+        const numbers = parseInt(quantitySelect.value); // Parse quantity to numbers
         const token = tokenInput.value.trim();
 
-        if (!text || !ratio || !duration || !model || !quantity || !token) {
+        // Get user_id from localStorage
+        const userId = localStorage.getItem('user_id');
+        if (!userId) {
+            showMessage('用户ID未找到，请先登录。', 'error');
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 1000);
+            return;
+        }
+
+        if (!prompt || !ratio || isNaN(seconds) || !model || isNaN(numbers) || !token) {
             showMessage('请检查所有的必填项是否填写完整。', 'error');
             return;
         }
@@ -78,27 +88,38 @@ document.addEventListener('DOMContentLoaded', () => {
         tooltip.style.display = 'none'; // Hide tooltip if it was visible
 
         try {
-            const response = await fetch('/api/generate-video', {
+            const requestBody = {
+                prompt: prompt,
+                image_url: "", // As per user's example
+                ratio: ratio,
+                numbers: numbers,
+                model: model,
+                seconds: seconds
+            };
+
+            const response = await fetch(`http://8.219.81.159:8090/api/v1/generate-video?user_id=${userId}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` // Add Authorization header
                 },
-                body: JSON.stringify({ text, ratio, duration, model, quantity, token })
+                body: JSON.stringify(requestBody)
             });
+
             const data = await response.json();
 
-            if (response.ok) {
-                showMessage(`任务提交成功！任务ID: ${data.taskId}`, 'success');
+            if (response.ok && data.status === 200) { // Assuming similar success structure as login API
+                showMessage(`任务提交成功！任务ID: ${data.data.job_id || '未知'}`, 'success'); // Use data.data.job_id
                 // Redirect to task management page after successful submission
                 setTimeout(() => {
                     window.location.href = 'task-management.html';
                 }, 1000); // Redirect after 1 second
             } else {
-                showMessage(`错误: ${data.error || '视频生成失败。'}`, 'error');
+                showMessage(`错误: ${data.message || data.error || '视频生成失败。'}`, 'error'); // Use data.message or data.error
             }
         } catch (error) {
             console.error('Error:', error);
-            showMessage('Failed to connect to backend or generate video.', 'error');
+            showMessage('网络错误或视频生成失败。', 'error');
         } finally {
             validateInputs(); // Re-validate to enable/disable button based on current inputs
         }

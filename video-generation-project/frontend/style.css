@@ -14,9 +14,9 @@ body {
     padding: 30px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 600px;
-    position: relative; /* Added for tooltip positioning, already there, but good to confirm */
+    width: 90%; /* Use a percentage for better responsiveness */
+    max-width: 1200px; /* Increased max-width for larger screens */
+    position: relative;
 }
 
 nav {
@@ -50,12 +50,14 @@ nav a.active {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
+    table-layout: fixed; /* Ensures column widths are respected */
 }
 
 #task-table th, #task-table td {
     border: 1px solid #ddd;
     padding: 8px;
     text-align: left;
+    word-wrap: break-word; /* Allow long text to wrap */
 }
 
 #task-table th {
@@ -68,10 +70,42 @@ nav a.active {
 }
 
 #task-table button {
-    width: auto;
     padding: 5px 10px;
-    margin: 0 5px 0 0;
     font-size: 14px;
+    min-width: 70px; /* Set a minimum width for consistent button size */
+    text-align: center; /* Ensure text is centered within the button */
+    white-space: nowrap; /* Prevent text from wrapping inside the button */
+}
+
+#task-table td:last-child {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+    justify-content: center; /* Center buttons horizontally within the cell */
+}
+
+/* Adjust column widths for better distribution */
+#task-table th:nth-child(1), #task-table td:nth-child(1) { /* 任务ID */
+    width: auto; /* Let it take remaining space */
+}
+#task-table th:nth-child(2), #task-table td:nth-child(2) { /* 提示词 */
+    width: 23%;
+}
+#task-table th:nth-child(3), #task-table td:nth-child(3) { /* 模型 */
+    width: 10%;
+}
+#task-table th:nth-child(4), #task-table td:nth-child(4) { /* 视频比例 */
+    width: 10%;
+}
+#task-table th:nth-child(5), #task-table td:nth-child(5) { /* 数量 */
+    width: 5%;
+}
+#task-table th:nth-child(6), #task-table td:nth-child(6) { /* 任务状态 */
+    width: 8%;
+}
+#task-table th:nth-child(7), #task-table td:nth-child(7) { /* 操作 */
+    width: 150px; /* Fixed pixel width for precise control */
 }
 
 #welcome-message {
@@ -104,7 +138,7 @@ h1, h2 {
 
 .input-group textarea,
 .input-group input[type="text"],
-.input-group select { /* Added select for dropdown */
+.input-group select {
     width: calc(100% - 20px);
     padding: 10px;
     border: 1px solid #ddd;
@@ -128,6 +162,10 @@ button:hover {
     background-color: #0056b3;
 }
 
+button:active {
+    background-color: #003f7f; /* Darker shade for active state */
+}
+
 button:disabled {
     background-color: #cccccc;
     cursor: not-allowed;
@@ -140,7 +178,7 @@ button:disabled {
     background-color: #e9ecef;
     color: #333;
     text-align: center;
-    display: none; /* Hidden by default */
+    display: none;
 }
 
 .message.show {
@@ -165,7 +203,7 @@ button:disabled {
 }
 
 .tooltip {
-    display: none; /* Hidden by default */
+    display: none;
     background-color: #333;
     color: #fff;
     text-align: center;
@@ -173,17 +211,16 @@ button:disabled {
     padding: 5px 10px;
     position: absolute;
     z-index: 1;
-    top: -30px; /* Position above the button */
+    top: -30px;
     left: 50%;
     transform: translateX(-50%);
-    white-space: nowrap; /* Prevent text wrapping */
+    white-space: nowrap;
 }
 
-/* Add a small arrow to the tooltip */
 .tooltip::after {
     content: "";
     position: absolute;
-    top: 100%; /* At the bottom of the tooltip */
+    top: 100%;
     left: 50%;
     margin-left: -5px;
     border-width: 5px;
@@ -191,22 +228,34 @@ button:disabled {
     border-color: #333 transparent transparent transparent;
 }
 
-/* To make positioning work correctly, the button's parent needs position: relative */
-/* Or, if the tooltip is a sibling, the container needs position: relative */
-/* Since the tooltip is a sibling of the button, and both are inside .container,
-   we need to make .container position: relative if it's not already.
-   Looking at .container, it doesn't have position: relative, so I'll add it. */
-.container {
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+.button-container {
+    position: relative;
     width: 100%;
-    max-width: 600px;
+    margin-top: 10px;
 }
 
-.button-container {
-    position: relative; /* For tooltip positioning */
-    width: 100%;
-    margin-top: 10px; /* Matches button's original margin-top */
+/* Responsive table for smaller screens */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+        width: 95%;
+    }
+
+    #task-table {
+        display: block;
+        overflow-x: auto; /* Enable horizontal scrolling for table */
+        white-space: nowrap; /* Prevent content from wrapping inside cells */
+    }
+
+    /* Optional: Adjust font sizes for smaller screens if needed */
+    #task-table th, #task-table td {
+        font-size: 12px;
+        padding: 6px;
+    }
+
+    #task-table button {
+        font-size: 12px;
+        padding: 3px 6px;
+        min-width: 60px;
+    }
 }
